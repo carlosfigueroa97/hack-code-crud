@@ -3,18 +3,18 @@ Nombre: CRUD.python
 Objetivo: implementar las cuatro operaciones  con mysql
 Autor:
 Fecha: 13 Noviembre de 2019
-
 """
 import pymysql
 import credentials as credentials
+import strings as st
 
 def dbConnection():
     try:
         db_connection = pymysql.connect(credentials.server,credentials.name,credentials.password,credentials.name)
-        print("successfully connection!")
+        print(st.success_connection)
         return db_connection    
     except SystemError as err:
-        print(f'Error: {err}')
+        print(st.err + str(err))
         return None
 
 def createTables(db):
@@ -30,10 +30,10 @@ def createTables(db):
                 ENGINE = InnoDB
             """)
             cursor.execute(query_workers)
-            print("Tables created successfully!") 
+            print(st.success_tables) 
     except SystemError as err:
         db.rollback()
-        print(f'Error {err}')  
+        print(st.err + str(err))  
 
 def getTables(db):
     cursor = db.cursor()
@@ -52,20 +52,20 @@ def insertData(db):
         if(len(tablesDatabase) != 0):                
             n = int(input("¿How much data do you want to insert? "))
             for _ in range(n):
-                key = input("Enter the worker's key: ")
-                name = input("Enter the worker's name: ")
-                salary = input("Enter the worker's salary: ")
+                key = input(st.read_key)
+                name = input(st.read_name)
+                salary = input(st.read_salary)
                 query_workers = ("""INSERT INTO workers(id,name,salary)
                     VALUES ('{0}','{1}','{2}')
                 """.format(key,name,salary))
                 cursor.execute(query_workers)
                 db.commit()
-            print("Inserted data!")
+            print(st.insert_data)
         else:
-            print("Please, create the tables into database!")
+            print(st.message_tables)
     except SystemError as err:
         db.rollback()
-        print(f'Error: {err}')
+        print(st.err + str(err))
 
 def showData(db):
     try:
@@ -80,9 +80,9 @@ def showData(db):
                 salary = row[2]
                 print("ID: {0} \t NAME: {1} \t SALARY: {2}".format(id,name,salary))            
         else:
-            print("Please, create the tables into database!")
+            print(st.message_tables)
     except SystemError as err:
-        print(f'Error: {err}')
+        print(st.err + str(err))
 
 def deleteData(db):
     try:
@@ -98,10 +98,10 @@ def deleteData(db):
             else:
                 print("Ok, aborting!")
         else:
-            print("Please, create the tables into database!")
+            print(st.message_tables)
     except SystemError as err:
         db.rollback()
-        print(f'Error: {err}')
+        print(st.err + str(err))
 
 def searchData(db):
     try:
@@ -110,21 +110,21 @@ def searchData(db):
         cursor = db.cursor()
         tablesDatabase = getTables(db)
         if(len(tablesDatabase) != 0):
-            option = input("To look for: 1.- Key  2.- Name  3.- Salary ")
+            option = input(st.message_option)
             if(option == "1"):
-                value = input("Enter the key: ")
-                field = "id"
+                value = input(st.read_key)
+                field = st.id
             elif(option == "2"):
-                value = input("Enter the name: ")
-                field = "name"
+                value = input(st.read_name)
+                field = st.name
             elif(option == "3"):
-                value = input("Enter the salary: ")
-                field = "salary"
+                value = input(st.read_salary)
+                field = st.salary
             else:
-                print("There is no such option.")
+                print(st.message_not_exists_option)
             if(option != None or option >= 1 or option <= 3):
                 if(value == None or value == ""):
-                    print("Null values are not accepted")
+                    print(st.message_null)
                 else:
                     query = ("SELECT * FROM `workers` WHERE " + field + "=%s")
                     response = validateId(cursor,value,field)
@@ -133,11 +133,11 @@ def searchData(db):
                         response = cursor.fetchall()
                         print(response)
                     else:
-                        print("That data was not found!")
+                        print(st.message_not_found)
         else:
-            print("Please, create the tables into database!")
+            print(st.message_tables)
     except SyntaxError as err:
-        print(f'Error: {err}')
+        print(st.err + str(err))
 
 def validateId(cursor,key,field):
     query = ("SELECT * FROM `workers` WHERE " + field + "=%s")
@@ -153,38 +153,38 @@ def updateData(db):
         cursor = db.cursor()
         tablesDatabase = getTables(db)
         if(len(tablesDatabase) != 0):
-            key = input("Enter the worker's key: ")
+            key = input(st.read_key)
             if(key != None or key != ""):
                 boolean = validateId(cursor,key,"id")
                 if(boolean == True):
-                    option = input("To look for: 1.- Key  2.- Name  3.- Salary ")
+                    option = input(st.message_option)
                     if(option == "1"):
-                        value = input("Enter the key: ")                        
+                        value = input(st.read_key)                        
                         query = ("UPDATE workers SET id=%s WHERE id=%s")
                     elif(option == "2"):
-                        value = input("Enter the name: ")                        
+                        value = input(st.read_name)                        
                         query = ("UPDATE workers SET name=%s WHERE id=%s")
                     elif(option == "3"):
-                        value = input("Enter the salary: ")                        
+                        value = input(st.read_salary)                        
                         query = ("UPDATE workers SET salary=%s WHERE id=%s")
                     else:
-                        print("There is no such option.")
+                        print(st.message_not_exists_option)
                     if(value != None or value != ""):
                         cursor.execute(query,(value,key))
                         db.commit()
                         print("Updated data!")
                     else:
-                        print("Null values are not accepted")
+                        print(st.message_null)
                 else:
-                    print("That data was not found!")
+                    print(st.message_not_found)
         else:
-            print("Please, create the tables into database!")
+            print(st.message_tables)
     except SyntaxError as err:
-        print(f'Error: {err}')
+        print(st.err + str(err))
 
 def dashboard(db):
     if(db == None):
-        print("Error trying to establish connection")
+        print(st.err_connection)
     else:
         loop = "S"
         while loop == "S" or loop == "s":
@@ -197,7 +197,7 @@ def dashboard(db):
             print("6. Create tables ")
             print("7. Exit")
             print("\n")
-            option = int(input("Choose option between 1 and 7: "))
+            option = int(input(st.dashboard_option))
 
             if option == 1:
                 insertData(db)
@@ -214,7 +214,7 @@ def dashboard(db):
             elif option == 7:
                 loop = 'n'
         else:
-            print("Please enter an integer between 1 and 7")
+            print(st.message_not_exists_option_dashboard)
 
 def main():
     db = dbConnection()
